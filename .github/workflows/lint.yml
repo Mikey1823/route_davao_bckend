@@ -53,7 +53,7 @@ jobs:
       - name: Run PHPStan
         run: |
           vendor/bin/phpstan clear-result-cache
-          vendor/bin/phpstan analyse -c phpstan.ci.neon
+          vendor/bin/phpstan analyse
 
       - name: Commit Changes
         uses: stefanzweifel/git-auto-commit-action@v5
