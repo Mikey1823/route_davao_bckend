@@ -1,0 +1,129 @@
+name: tests
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    environment: Testing
+
+    services:
+      postgres:
+        image: timescale/timescaledb-ha:pg17.7-ts2.23.1-oss
+        env:
+          POSTGRES_DB: serbisyo-ev-station-test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: 123
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Typesense
+        uses: jirevwe/typesense-github-action@v1.0.1
+        with:
+          typesense-version: '29.0'
+          typesense-port: 8108
+          typesense-api-key: xyz
+
+      - name: Wait for Typesense
+        run: |
+          echo "Waiting for Typesense to be healthy..."
+          timeout 30 bash -c 'until curl -s http://127.0.0.1:8108/health | grep -q "\"ok\":true"; do sleep 1; done'
+          echo "Typesense is ready!"
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.4.14
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy Environment File
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Copy Testing Environment File
+        run: cp .env .env.testing
+
+      - name: Configure Database
+        run: |
+          php artisan config:clear
+          echo "DB_CONNECTION=pgsql" >> .env.testing
+          echo "DB_HOST=127.0.0.1" >> .env.testing
+          echo "DB_PORT=5432" >> .env.testing
+          echo "DB_DATABASE=serbisyo-ev-station-test" >> .env.testing
+          echo "DB_USERNAME=postgres" >> .env.testing
+          echo "DB_PASSWORD=123" >> .env.testing
+          echo "REDIS_HOST=127.0.0.1" >> .env.testing
+          echo "REDIS_PORT=6379" >> .env.testing
+          echo "TYPESENSE_HOST=127.0.0.1" >> .env.testing
+          echo "TYPESENSE_PORT=8108" >> .env.testing
+          echo "TYPESENSE_PROTOCOL=http" >> .env.testing
+          echo "TYPESENSE_API_KEY=xyz" >> .env.testing
+
+      - name: Run Migrations
+        run: php artisan migrate:refresh --env=testing --force --seed
+
+      - name: Cache Vite Build
+        uses: actions/cache@v4
+        with:
+          path: public/build
+          key: ${{ runner.os }}-vite-${{ hashFiles('resources/**/*', 'vite.config.*') }}
+          restore-keys: ${{ runner.os }}-vite-
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Run Tests
+        run: php artisan test --env=testing
