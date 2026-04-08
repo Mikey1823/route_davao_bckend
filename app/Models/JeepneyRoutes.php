@@ -22,7 +22,7 @@ class JeepneyRoutes extends Model
     protected $fillable = [
         'name',
         'route_number',
-        'color-hex',
+        'color_hex',
         'is_loop',
     ];
 
@@ -41,11 +41,11 @@ class JeepneyRoutes extends Model
     ];
 
     /**
-     * @return HasMany<RoutePin, $this>
+     * @return HasMany<Pins, $this>
      */
-    public function routePins(): HasMany
+    public function pins(): HasMany
     {
-        return $this->hasMany(RoutePin::class, 'jeepney_route_id');
+        return $this->hasMany(Pins::class, 'jeepney_route_id');
     }
 
     /**

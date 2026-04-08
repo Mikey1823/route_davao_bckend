@@ -16,8 +16,8 @@ return new class extends Migration
         Schema::create('jeepney_routes', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('route_number');
-            $table->text('color-hex')->nullable();
+            $table->string('route_number')->nullable();
+            $table->text('color_hex')->nullable();
             $table->boolean('is_loop')->default(false);
             $table->timestamps();
         });

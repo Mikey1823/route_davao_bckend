@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\JeepneyRoutes;
-use App\Models\Pins;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,10 +14,12 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        Schema::create('route_pins', function (Blueprint $table) {
+        Schema::create('pins', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Pins::class, 'pin_id')->constrained()->cascadeOnDelete();
             $table->foreignIdFor(JeepneyRoutes::class, 'jeepney_route_id')->constrained()->cascadeOnDelete();
+            $table->string('label');
+            $table->geometry('geography_point', 'POINT', 4326);
+            $table->boolean('is_major_hub')->default(false);
             $table->timestamps();
         });
 
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('route_pins');
+        Schema::dropIfExists('pins');
     }
 };

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Clickbar\Magellan\Data\Geometries\Point;
 use Database\Factories\StopFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,12 +36,38 @@ class Stop extends Model
         'is_major_stop' => false,
     ];
 
+    protected $appends = [
+        'latitude',
+        'longitude',
+    ];
+
     /**
      * @var array<string, string>
      */
     protected $casts = [
         'is_major_stop' => 'boolean',
+        'location' => Point::class,
     ];
+
+    /**
+     * @return Attribute<float|null, never>
+     */
+    protected function latitude(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->location?->getLatitude(),
+        );
+    }
+
+    /**
+     * @return Attribute<float|null, never>
+     */
+    protected function longitude(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => $this->location?->getLongitude(),
+        );
+    }
 
     /**
      * @return BelongsTo<JeepneyRoutes, $this>

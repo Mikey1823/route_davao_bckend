@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\JeepneyRoutes;
 use App\Models\Pins;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,8 @@ class PinsFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->city(),
+            'jeepney_route_id' => JeepneyRoutes::factory(),
+            'label' => fake()->city(),
             'geography_point' => 'POINT('.$this->faker->longitude().' '.$this->faker->latitude().')',
             'is_major_hub' => fake()->boolean(20),
         ];

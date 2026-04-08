@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Database\Seeders\Seeders\PinsSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -22,10 +21,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            PinsSeeder::class,
-            Seeders\JeepneyRoutesSeeder::class,
-            Seeders\RoutePinSeeder::class,
-            Seeders\StopSeeder::class,
+            Seeders\DavaoTransitSeeder::class,
         ]);
     }
 }

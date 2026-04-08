@@ -6,7 +6,7 @@ use Clickbar\Magellan\Data\Geometries\Point;
 use Database\Factories\PinsFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pins extends Model
 {
@@ -21,7 +21,8 @@ class Pins extends Model
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'jeepney_route_id',
+        'label',
         'geography_point',
         'is_major_hub',
     ];
@@ -41,10 +42,10 @@ class Pins extends Model
     ];
 
     /**
-     * @return HasMany<RoutePin, $this>
+     * @return BelongsTo<JeepneyRoutes, $this>
      */
-    public function routePins(): HasMany
+    public function jeepneyRoute(): BelongsTo
     {
-        return $this->hasMany(RoutePin::class, 'pin_id');
+        return $this->belongsTo(JeepneyRoutes::class, 'jeepney_route_id');
     }
 }
